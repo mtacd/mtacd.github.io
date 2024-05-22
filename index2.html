@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Construction Map</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        #container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        #sidebar {
+            width: 300px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+        }
+        #sidebar h1 {
+            font-size: 1.5em;
+            margin-top: 0;
+        }
+        #main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+            position: relative;
+        }
+        #svgContainer {
+            width: 100%;
+            height: 100%;
+        }
+        object {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        #modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+        }
+        #close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        #close:hover,
+        #close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #project-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #project-table th, #project-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #project-table th {
+            background-color: #f2f2f2;
+            color: black;
+        }
+        #zoomControls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        #zoomControls button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 14px;
+        }
+        /* Project details styles */
+        #project-details p {
+            margin: 0;
+            padding: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <h1>Filters</h1>
+            <label for="projectType">Project Type:</label>
+            <select id="projectType">
+                <option value="">Select a project type</option>
+                <option value="modern_signals">Modern Signals</option>
+                <option value="structure_repair">Structure Repair</option>
+                <option value="power_upgrades">Power Upgrades</option>
+            </select><br>
+            <label for="strategy">Strategy:</label>
+            <select id="strategy">
+                <option value="">Select a strategy</option>
+                <option value="resilience">Resilience</option>
+                <option value="sustainability">Sustainability</option>
+                <option value="equity">Equity</option>
+            </select><br>
+            <label for="stage">Stage:</label>
+            <select id="stage">
+                <option value="">Select a stage</option>
+                <option value="planned">Planned</option>
+                <option value="procurement">Procurement</option>
+                <option value="construction">Construction</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+        <div id="main">
+            <div id="svgContainer">
+                <object id="svgObject" type="image/svg+xml" data="Subway_Construction_Map_Test.svg"></object>
+            </div>
+            <div id="zoomControls">
+                <button id="zoomIn">Zoom In</button>
+                <button id="zoomOut">Zoom Out</button>
+                <button id="resetZoom">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal">
+        <div id="modal-content">
+            <span id="close">&times;</span>
+            <div id="project-listing">
+                <h2>Project Details</h2>
+                <table id="project-table">
+                    <thead>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Category</th>
+                            <th>Completion Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="project-list">
+                    </tbody>
+                </table>
+            </div>
+            <div id="project-details" style="display:none;">
+                <button id="back-to-list">Back to Project List</button>
+                <h2 id="project-name"></h2>
+                <p><strong>Type:</strong> <span id="project-type"></span></p>
+                <p><strong>Strategy:</strong> <span id="project-strategy"></span></p>
+                <p><strong>Description:</strong> <span id="project-description"></span></p>
+                <p><strong>Budget:</strong> <span id="project-budget"></span></p>
+                <p><strong>Stage:</strong> <span id="project-stage"></span></p>
+                <p><strong>Completion Date:</strong> <span id="project-completion-date"></span></p>
+                <p><strong>Photo:</strong> <span id="project-photo">[Placeholder for Photo]</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        let projectsData = [];
+
+        function loadCSVAndApplySettings() {
+            Papa.parse('projects.csv', {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    console.log('Parsed CSV Data:', results.data);
+                    projectsData = results.data;
+                    applyVisibilitySettings(projectsData);
+                },
+                error: function(error) {
+                    console.error('Error parsing CSV:', error);
+                }
+            });
+        }
+
+        function applyVisibilitySettings(data) {
+            const svgDoc = document.getElementById('svgObject').contentDocument;
+            if (!svgDoc) {
+                console.error('SVG document not found');
+                return;
+            }
+
+            const filters = {
+                projectType: document.getElementById('projectType').value,
+                strategy: document.getElementById('strategy').value,
+                stage: document.getElementById('stage').value
+            };
+
+            const activeFilters = [
+                filters.projectType,
+                filters.strategy,
+                filters.stage
+            ].filter(Boolean).length;
+
+            const affectedSegments = {
+                modern_signals: new Set(),
+                structure_repair: new Set(),
+                power_upgrades: new Set()
+            };
+
+            data.forEach((row, index) => {
+                const projectType = row.project_type;
+                if (row.affected_segments && row.affected_segments.trim() !== '') {
+                    const segments = row.affected_segments.split(',').map(s => s.trim());
+                    console.log(`Row ${index}: Project ${row.project_id} - Segments: ${segments}`);
+                    segments.forEach(segment => {
+                        affectedSegments[projectType].add(segment);
+                    });
+                } else {
+                    console.warn(`Row ${index}: Missing or empty affected_segments for project ${row.project_id}`);
+                }
+            });
+
+            console.log('Affected Segments:', affectedSegments);
+
+            svgDoc.querySelectorAll('g[id$="-2"]').forEach(segment => {
+                const segmentId = segment.id.replace('-2', '');
+                console.log(`Processing segment ${segmentId}`);
+
+                const matchesProjectType = filters.projectType && affectedSegments[filters.projectType].has(segmentId);
+                const matchesStrategy = filters.strategy && data.some(project => project.strategy === filters.strategy && project.affected_segments.includes(segmentId));
+                const matchesStage = filters.stage && data.some(project => project.stage === filters.stage && project.affected_segments.includes(segmentId));
+
+                let shouldShow = true;
+
+                if (activeFilters === 0) {
+                    shouldShow = !(affectedSegments.modern_signals.has(segmentId) ||
+                                   affectedSegments.structure_repair.has(segmentId) ||
+                                   affectedSegments.power_upgrades.has(segmentId));
+                } else if (activeFilters === 1) {
+                    shouldShow = !(matchesProjectType || matchesStrategy || matchesStage);
+                } else if (activeFilters === 2) {
+                    shouldShow = !(matchesProjectType && matchesStrategy) &&
+                                 !(matchesProjectType && matchesStage) &&
+                                 !(matchesStrategy && matchesStage);
+                } else if (activeFilters === 3) {
+                    shouldShow = !(matchesProjectType && matchesStrategy && matchesStage);
+                }
+
+                console.log(`Segment ${segmentId}: shouldShow=${shouldShow}`);
+                segment.style.display = shouldShow ? 'inline' : 'none';
+
+                if (!shouldShow) {
+                    const fillSegment = svgDoc.getElementById(segmentId);
+                    if (fillSegment) {
+                        console.log(`Adding event listeners to segment ${segmentId}`);
+                        fillSegment.addEventListener('mouseover', (event) => {
+                            console.log(`Mouse over segment ${segmentId}`);
+                            event.target.style.stroke = 'black';
+                            event.target.style.strokeWidth = '30';
+                        });
+                        fillSegment.addEventListener('mouseout', (event) => {
+                            console.log(`Mouse out segment ${segmentId}`);
+                            event.target.style.stroke = '';
+                            event.target.style.strokeWidth = '';
+                        });
+                        fillSegment.addEventListener('click', () => {
+                            console.log(`Click on segment ${segmentId}`);
+                            showProjectDetails(segmentId);
+                        });
+                    } else {
+                        console.warn(`Fill segment not found for ${segmentId}`);
+                    }
+                }
+            });
+        }
+
+        function showProjectDetails(segmentId) {
+            const projectList = document.getElementById('project-list');
+            projectList.innerHTML = '';
+
+            projectsData.forEach(project => {
+                if (project.affected_segments && project.affected_segments.includes(segmentId)) {
+                    const row = document.createElement('tr');
+
+                    const cellName = document.createElement('td');
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = project.project_name;
+                    link.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        showProjectDetailView(project);
+                    });
+                    cellName.appendChild(link);
+                    row.appendChild(cellName);
+
+                    const cellType = document.createElement('td');
+                    cellType.textContent = project.project_type;
+                    row.appendChild(cellType);
+
+                    const cellCompletionDate = document.createElement('td');
+                    cellCompletionDate.textContent = project.completion_date;
+                    row.appendChild(cellCompletionDate);
+
+                    projectList.appendChild(row);
+                }
+            });
+
+            document.getElementById('project-listing').style.display = 'block';
+            document.getElementById('project-details').style.display = 'none';
+
+            const modal = document.getElementById('modal');
+            modal.style.display = 'block';
+        }
+
+        function showProjectDetailView(project) {
+            document.getElementById('project-name').textContent = project.project_name;
+            document.getElementById('project-type').textContent = project.project_type;
+            document.getElementById('project-strategy').textContent = project.strategy;
+            document.getElementById('project-description').textContent = project.description;
+            document.getElementById('project-budget').textContent = project.budget;
+            document.getElementById('project-stage').textContent = project.stage;
+            document.getElementById('project-completion-date').textContent = project.completion_date;
+
+            document.getElementById('project-listing').style.display = 'none';
+            document.getElementById('project-details').style.display = 'block';
+        }
+
+        document.getElementById('back-to-list').addEventListener('click', () => {
+            document.getElementById('project-listing').style.display = 'block';
+            document.getElementById('project-details').style.display = 'none';
+        });
+
+        document.getElementById('svgObject').addEventListener('load', function() {
+            const svgDoc = this.contentDocument;
+
+            if (!svgDoc) {
+                console.error('SVG document not found after load event');
+                return;
+            }
+
+            console.log('SVG document loaded');
+
+            const svgElement = svgDoc.documentElement;
+            svgElement.setAttribute('viewBox', '0 0 4012.99 4888.47');
+
+            document.getElementById('projectType').addEventListener('change', loadCSVAndApplySettings);
+            document.getElementById('strategy').addEventListener('change', loadCSVAndApplySettings);
+            document.getElementById('stage').addEventListener('change', loadCSVAndApplySettings);
+
+            loadCSVAndApplySettings();
+        });
+
+        var modal = document.getElementById('modal');
+        var span = document.getElementById('close');
+
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,23 @@
+project_id,project_type,affected_segments,project_name,strategy,description,budget,stage,completion_date
+1,modern_signals,"_1-2,_3-4",Signal Upgrade Project,resilience,Upgrade signals to modern standards,5000000,planned,12/31/25
+2,structure_repair,"_2-3,_4-5",Structural Repair Project,sustainability,Repair and reinforce structural elements,3000000,procurement,6/30/24
+3,power_upgrades,"_5-6,_7-8",Power Enhancement Project,equity,Enhance power supply for better service,7000000,construction,9/30/23
+4,modern_signals,"_6-7,_8-9",Second Signal Upgrade,resilience,Upgrade signals to modern standards,5000000,completed,11/15/22
+5,modern_signals,"_9-10,_10-11",Third Signal Upgrade,resilience,Modernizing signal systems for efficiency,6000000,planned,1/15/26
+6,structure_repair,"_11-12,_12-13",Major Structure Overhaul,sustainability,Complete overhaul of structural integrity,12000000,procurement,3/25/25
+7,power_upgrades,"13-14,14-15",Power Infrastructure Improvement,equity,Upgrade power infrastructure to handle increased loads,8000000,construction,12/1/23
+8,modern_signals,"15-16,16-17",Signal Enhancement Initiative,resilience,Implementing new signal systems,5500000,completed,8/20/21
+9,structure_repair,"17-18,18-19",Reinforcement and Repair Project,sustainability,Reinforcing aging structures,4000000,planned,11/10/24
+10,power_upgrades,"19-20,20-21",Advanced Power Systems,equity,Implement advanced power systems for better efficiency,9000000,procurement,5/30/24
+11,modern_signals,"21-22,1-2",Metro Signal Upgrade,resilience,Upgrade metro signal systems,7500000,planned,4/20/26
+12,structure_repair,"2-3,3-4",Structural Safety Project,sustainability,Enhance structural safety across the network,9500000,procurement,8/15/25
+13,power_upgrades,"4-5,5-6",Power Grid Modernization,equity,Modernize the power grid for future demands,11000000,construction,9/22/24
+14,modern_signals,"6-7,7-8",Citywide Signal Project,resilience,Citywide upgrade of signal systems,12000000,completed,7/5/23
+15,structure_repair,"8-9,9-10",Infrastructure Renewal,sustainability,Renew aging infrastructure,5000000,planned,12/12/25
+16,power_upgrades,"10-11,11-12",Green Power Initiative,equity,Implement green power solutions,9500000,procurement,3/10/24
+17,modern_signals,"12-13,13-14",Fourth Signal Upgrade,resilience,Continued signal system upgrades,7000000,planned,6/30/26
+18,structure_repair,"14-15,15-16",Comprehensive Repair Project,sustainability,Comprehensive repairs to critical structures,13000000,procurement,10/25/25
+19,power_upgrades,"16-17,17-18",Power Supply Enhancement,equity,Enhance power supply and efficiency,10500000,construction,11/15/23
+20,modern_signals,"18-19,19-20",Signal Safety Enhancement,resilience,Enhancing signal safety measures,6800000,completed,4/11/22
+21,structure_repair,"20-21,21-22",Structural Improvement Program,sustainability,Improve structural integrity and safety,8000000,planned,7/10/25
+22,power_upgrades,"1-2,2-3",Energy Efficiency Upgrade,equity,Upgrade to energy-efficient power systems,8500000,procurement,1/20/24
